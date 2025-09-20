@@ -561,9 +561,16 @@
       // Render H2H matrix (order = current standings order)
       const order = rows.map(r=>({ id:r.id, name:r.name }));
       const M = Scoring.computeH2HMatrix(s);
+      const fmtHalf = (x)=>{
+        const y = Math.round((+x||0)*2)/2; // snap to .5
+        const n = Math.trunc(y);
+        const f = +(y - n).toFixed(1);
+        if(f===0.5){ return (n? n.toString(): '') + '½'; }
+        return n.toString();
+      };
       // Build head
       const headRow = document.createElement('tr');
-      headRow.innerHTML = '<th></th>' + order.map(o=>`<th>${o.name}</th>`).join('');
+      headRow.innerHTML = '<th></th>' + order.map(o=>`<th>${o.name}</th>`).join('') + '<th title="Součet">Σ</th>';
       els.h2hHead.innerHTML = '';
       els.h2hHead.appendChild(headRow);
       // Body
@@ -571,13 +578,16 @@
       order.forEach(row => {
         const tr = document.createElement('tr');
         let cells = `<th>${row.name}</th>`;
+        let sum = 0;
         order.forEach(col => {
           if(col.id===row.id){ cells += '<td class="muted">–</td>'; }
           else {
             const v = (M.get(row.id)?.get(col.id)) || 0;
-            cells += `<td>${(+v).toFixed(2)}</td>`;
+            sum += (+v)||0;
+            cells += `<td>${fmtHalf(v)}</td>`;
           }
         });
+        cells += `<td><strong>${fmtHalf(sum)}</strong></td>`;
         tr.innerHTML = cells;
         els.h2hBody.appendChild(tr);
       });
